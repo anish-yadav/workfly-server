@@ -1,0 +1,10 @@
+{
+    "test": {
+        "REFRESH_URL":"https://accounts.zoho.in/oauth/v2/token?refresh_token=1000.d83ba71102a6940b212058c1c76d768e.767b1e40fa144b1200761a34fa3c051a&client_id=1000.47FY9MTU66DQ8IIN3HSXK0NGNCZZVA&client_secret=c4f7600acc56cd841b3155ee7a0d3a9a3bcae8e245&grant_type=refresh_token",
+        "BASE_URL":"https://creator.zoho.in/api/v2/deepak64/bloodconnect-india-donor-system"
+    },
+    "development": {
+        "REFRESH_URL":"https://accounts.zoho.in/oauth/v2/token?refresh_token=1000.d83ba71102a6940b212058c1c76d768e.767b1e40fa144b1200761a34fa3c051a&client_id=1000.47FY9MTU66DQ8IIN3HSXK0NGNCZZVA&client_secret=c4f7600acc56cd841b3155ee7a0d3a9a3bcae8e245&grant_type=refresh_token",
+        "BASE_URL":"https://creator.zoho.in/api/v2/deepak64/bloodconnect-india-donor-system"
+    }
+}
