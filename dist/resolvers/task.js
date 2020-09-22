@@ -30,16 +30,46 @@ __decorate([
 TaskInput = __decorate([
     type_graphql_1.InputType()
 ], TaskInput);
+let PaginatedTask = class PaginatedTask {
+};
+__decorate([
+    type_graphql_1.Field(() => [Task_1.Task]),
+    __metadata("design:type", Array)
+], PaginatedTask.prototype, "tasks", void 0);
+__decorate([
+    type_graphql_1.Field(() => Boolean),
+    __metadata("design:type", Boolean)
+], PaginatedTask.prototype, "hasMore", void 0);
+PaginatedTask = __decorate([
+    type_graphql_1.ObjectType()
+], PaginatedTask);
 let TaskResolver = class TaskResolver {
     creator(task, { userLoader }) {
         return userLoader.load(task.creatorId);
     }
-    async tasks() {
-        return typeorm_1.getConnection()
+    handler(task, { userLoader }) {
+        if (task.handlerId === null)
+            return null;
+        return userLoader.load(task.handlerId);
+    }
+    async tasks(limit, cursor) {
+        let MAX_LIMIT = limit ? Math.min(50, limit) : 50;
+        if (!cursor)
+            cursor = new Date().getTime().toString();
+        let tasks = await typeorm_1.getConnection()
             .getRepository(Task_1.Task)
             .createQueryBuilder("p")
             .orderBy('p."createdAt"', "DESC")
+            .where('p."createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) })
+            .take(MAX_LIMIT)
             .getMany();
+        return {
+            tasks,
+            hasMore: tasks.length === MAX_LIMIT
+        };
+    }
+    async task(id) {
+        return Task_1.Task.findOne(id);
     }
     createTask(task, { req }) {
         if (!req.session.userId)
@@ -59,6 +89,22 @@ let TaskResolver = class TaskResolver {
         task.description = description;
         return task.save();
     }
+    async doTask(taskId, { req }) {
+        if (!req.session.userId)
+            throw new Error("Not Authorized");
+        const task = await Task_1.Task.findOne(taskId);
+        if (!task)
+            return undefined;
+        task.handlerId = req.session.userId;
+        return task.save();
+    }
+    async updateMany(description) {
+        let data = await typeorm_1.getConnection().getRepository(Task_1.Task).createQueryBuilder().update().set({ description: description }).where("id > 0").execute();
+        if (data.affected && data.affected > 0) {
+            return true;
+        }
+        return false;
+    }
 };
 __decorate([
     type_graphql_1.FieldResolver(() => User_1.User),
@@ -68,11 +114,27 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TaskResolver.prototype, "creator", null);
 __decorate([
-    type_graphql_1.Query(() => [Task_1.Task]),
+    type_graphql_1.FieldResolver(() => User_1.User),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Task_1.Task, Object]),
+    __metadata("design:returntype", void 0)
+], TaskResolver.prototype, "handler", null);
+__decorate([
+    type_graphql_1.Query(() => PaginatedTask),
+    __param(0, type_graphql_1.Arg("limit", { nullable: true })),
+    __param(1, type_graphql_1.Arg("cursor", { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", Promise)
 ], TaskResolver.prototype, "tasks", null);
+__decorate([
+    type_graphql_1.Query(() => Task_1.Task),
+    __param(0, type_graphql_1.Arg("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], TaskResolver.prototype, "task", null);
 __decorate([
     type_graphql_1.Mutation(() => Task_1.Task),
     __param(0, type_graphql_1.Arg("input")),
@@ -90,6 +152,21 @@ __decorate([
     __metadata("design:paramtypes", [Number, String, Object]),
     __metadata("design:returntype", Promise)
 ], TaskResolver.prototype, "editTask", null);
+__decorate([
+    type_graphql_1.Mutation(() => Task_1.Task),
+    __param(0, type_graphql_1.Arg("taskId")),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], TaskResolver.prototype, "doTask", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Arg("description")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TaskResolver.prototype, "updateMany", null);
 TaskResolver = __decorate([
     type_graphql_1.Resolver(Task_1.Task)
 ], TaskResolver);
