@@ -4,7 +4,8 @@ import {
   PrimaryGeneratedColumn,
   BaseEntity,
   Column,
-  CreateDateColumn,ManyToOne
+  CreateDateColumn,
+  ManyToOne,
 } from "typeorm";
 import { User } from "./User";
 
@@ -25,27 +26,27 @@ export class Task extends BaseEntity {
 
   @Field()
   @Column()
-  status: string
+  status: "Open" | "Working" | "Completed";
 
   @Field()
   @Column()
-  creatorId: number
+  creatorId: number;
 
-  @Field(() => User,{ nullable: true})
-  @ManyToOne( () => User, user => user.tasks)
-  creator: User
+  @Field(() => User, { nullable: true })
+  @ManyToOne(() => User, (user) => user.tasks)
+  creator: User;
 
   @Field(() => String)
   @CreateDateColumn()
   createdAt: Date;
-  
-  @Field(() => Int,{ nullable: true })
+
+  @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
   handlerId: number;
 
-  @Field(() => User,{ nullable: true})
-  @ManyToOne(() => User,user => user.myTasks)
-  handler: User
+  @Field(() => User, { nullable: true })
+  @ManyToOne(() => User, (user) => user.myTasks)
+  handler: User;
 
   @Field(() => String)
   @CreateDateColumn()

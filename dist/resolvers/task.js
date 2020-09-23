@@ -52,20 +52,23 @@ let TaskResolver = class TaskResolver {
             return null;
         return userLoader.load(task.handlerId);
     }
-    async tasks(limit, cursor) {
+    async tasks(limit, cursor, criteria) {
         let MAX_LIMIT = limit ? Math.min(50, limit) : 50;
         if (!cursor)
             cursor = new Date().getTime().toString();
-        let tasks = await typeorm_1.getConnection()
+        let query = typeorm_1.getConnection()
             .getRepository(Task_1.Task)
             .createQueryBuilder("p")
             .orderBy('p."createdAt"', "DESC")
             .where('p."createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) })
-            .take(MAX_LIMIT)
-            .getMany();
+            .take(MAX_LIMIT);
+        if (criteria) {
+            query.where('p.status = :status', { status: criteria });
+        }
+        let tasks = await query.getMany();
         return {
             tasks,
-            hasMore: tasks.length === MAX_LIMIT
+            hasMore: tasks.length === MAX_LIMIT,
         };
     }
     async task(id) {
@@ -96,10 +99,17 @@ let TaskResolver = class TaskResolver {
         if (!task)
             return undefined;
         task.handlerId = req.session.userId;
+        task.status = "Working";
         return task.save();
     }
     async updateMany(description) {
-        let data = await typeorm_1.getConnection().getRepository(Task_1.Task).createQueryBuilder().update().set({ description: description }).where("id > 0").execute();
+        let data = await typeorm_1.getConnection()
+            .getRepository(Task_1.Task)
+            .createQueryBuilder()
+            .update()
+            .set({ description: description })
+            .where("id > 0")
+            .execute();
         if (data.affected && data.affected > 0) {
             return true;
         }
@@ -124,8 +134,9 @@ __decorate([
     type_graphql_1.Query(() => PaginatedTask),
     __param(0, type_graphql_1.Arg("limit", { nullable: true })),
     __param(1, type_graphql_1.Arg("cursor", { nullable: true })),
+    __param(2, type_graphql_1.Arg("criteria", { nullable: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, String, String]),
     __metadata("design:returntype", Promise)
 ], TaskResolver.prototype, "tasks", null);
 __decorate([

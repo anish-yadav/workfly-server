@@ -42,7 +42,7 @@ __decorate([
 ], Task.prototype, "creatorId", void 0);
 __decorate([
     type_graphql_1.Field(() => User_1.User, { nullable: true }),
-    typeorm_1.ManyToOne(() => User_1.User, user => user.tasks),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.tasks),
     __metadata("design:type", User_1.User)
 ], Task.prototype, "creator", void 0);
 __decorate([
@@ -57,7 +57,7 @@ __decorate([
 ], Task.prototype, "handlerId", void 0);
 __decorate([
     type_graphql_1.Field(() => User_1.User, { nullable: true }),
-    typeorm_1.ManyToOne(() => User_1.User, user => user.myTasks),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.myTasks),
     __metadata("design:type", User_1.User)
 ], Task.prototype, "handler", void 0);
 __decorate([
