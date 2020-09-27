@@ -38,6 +38,9 @@ export class User extends BaseEntity {
   @Column()
   zohoID: string
 
+  @Column({ nullable: true })
+  pushToken: string
+
   @Column()
   password!: string;
 
@@ -56,6 +59,5 @@ export class User extends BaseEntity {
   @Field(() => String)
   @CreateDateColumn()
   updatedAt : Date;
-
 
 }

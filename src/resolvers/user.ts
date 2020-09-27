@@ -63,6 +63,16 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
+  async setPushToken(@Arg("token") token:string, @Ctx() { req }:MyContext):Promise<Boolean> {
+    if(!req.session.userId) 
+      throw new Error("Not Authorized")
+    let user = await User.findOne(req.session.userId)
+    if(!user) return false
+    user.pushToken = token
+    user  = await user.save();
+    return user ? true: false;
+  }
+  @Mutation(() => Boolean)
   logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>
       req.session.destroy((err) => {

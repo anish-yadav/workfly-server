@@ -51,6 +51,10 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "zohoID", void 0);
 __decorate([
+    typeorm_1.Column({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "pushToken", void 0);
+__decorate([
     typeorm_1.Column(),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);

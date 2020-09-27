@@ -28,6 +28,10 @@ export class Task extends BaseEntity {
   @Column()
   status: "Open" | "Working" | "Completed";
 
+  @Field({ nullable: true })
+  @Column({ nullable: true})
+  department:string
+
   @Field()
   @Column()
   creatorId: number;

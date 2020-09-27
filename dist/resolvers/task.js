@@ -17,6 +17,7 @@ const Task_1 = require("../entities/Task");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const User_1 = require("../entities/User");
+const expo_1 = require("../helpers/expo");
 let TaskInput = class TaskInput {
 };
 __decorate([
@@ -27,6 +28,10 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], TaskInput.prototype, "description", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], TaskInput.prototype, "department", void 0);
 TaskInput = __decorate([
     type_graphql_1.InputType()
 ], TaskInput);
@@ -43,6 +48,23 @@ __decorate([
 PaginatedTask = __decorate([
     type_graphql_1.ObjectType()
 ], PaginatedTask);
+let Stats = class Stats {
+};
+__decorate([
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    __metadata("design:type", Number)
+], Stats.prototype, "open", void 0);
+__decorate([
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    __metadata("design:type", Number)
+], Stats.prototype, "working", void 0);
+__decorate([
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    __metadata("design:type", Number)
+], Stats.prototype, "completed", void 0);
+Stats = __decorate([
+    type_graphql_1.ObjectType()
+], Stats);
 let TaskResolver = class TaskResolver {
     creator(task, { userLoader }) {
         return userLoader.load(task.creatorId);
@@ -51,6 +73,14 @@ let TaskResolver = class TaskResolver {
         if (task.handlerId === null)
             return null;
         return userLoader.load(task.handlerId);
+    }
+    async stats() {
+        const tasks = await Task_1.Task.find({});
+        return {
+            completed: tasks.filter(t => t.status === "Completed").length,
+            open: tasks.filter(t => t.status === "Open").length,
+            working: tasks.filter(t => t.status === "Working").length
+        };
     }
     async tasks(limit, cursor, criteria) {
         let MAX_LIMIT = limit ? Math.min(50, limit) : 50;
@@ -63,7 +93,7 @@ let TaskResolver = class TaskResolver {
             .where('p."createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) })
             .take(MAX_LIMIT);
         if (criteria) {
-            query.where('p.status = :status', { status: criteria });
+            query.where('p."createdAt" < :cursor AND p.status = :status', { cursor: new Date(parseInt(cursor)), status: criteria });
         }
         let tasks = await query.getMany();
         return {
@@ -77,6 +107,7 @@ let TaskResolver = class TaskResolver {
     createTask(task, { req }) {
         if (!req.session.userId)
             throw new Error("not authorized");
+        expo_1.sendNotification(task.department);
         return Task_1.Task.create({
             ...task,
             creatorId: req.session.userId,
@@ -130,6 +161,12 @@ __decorate([
     __metadata("design:paramtypes", [Task_1.Task, Object]),
     __metadata("design:returntype", void 0)
 ], TaskResolver.prototype, "handler", null);
+__decorate([
+    type_graphql_1.Query(() => Stats),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TaskResolver.prototype, "stats", null);
 __decorate([
     type_graphql_1.Query(() => PaginatedTask),
     __param(0, type_graphql_1.Arg("limit", { nullable: true })),

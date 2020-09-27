@@ -29,7 +29,6 @@ const main = async () => {
         synchronize: true,
         entities: [User, Token, Task]
     })
-
     const app = express()
 
     app.use(cors({

@@ -9,11 +9,12 @@ import {
   Resolver,
   FieldResolver,
   Root,
-  ObjectType,
+  ObjectType, Int
 } from "type-graphql";
 import { MyContext } from "../types";
 import { getConnection } from "typeorm";
 import { User } from "../entities/User";
+import { sendNotification } from "../helpers/expo";
 
 @InputType()
 class TaskInput {
@@ -22,6 +23,9 @@ class TaskInput {
 
   @Field()
   description: string;
+
+  @Field()
+  department:string
 }
 
 @ObjectType()
@@ -31,6 +35,17 @@ class PaginatedTask {
 
   @Field(() => Boolean)
   hasMore: boolean;
+}
+@ObjectType() 
+class Stats {
+  @Field(() => Int)
+  open:number
+  
+  @Field(() => Int)
+  working:number
+  
+  @Field(() => Int)
+  completed:number
 }
 
 @Resolver(Task)
@@ -51,6 +66,17 @@ export class TaskResolver {
   }
 
 
+  @Query(() => Stats)
+  async stats(): Promise<Stats> {
+    const tasks = await Task.find({});
+
+    return {
+      completed: tasks.filter(t => t.status === "Completed").length,
+      open: tasks.filter(t => t.status === "Open").length,
+      working: tasks.filter(t => t.status === "Working").length
+    }
+  }
+
   // Getting tasks
   @Query(() => PaginatedTask)
   async tasks(
@@ -69,7 +95,7 @@ export class TaskResolver {
       .take(MAX_LIMIT);
 
       if(criteria) {
-        query.where('p.status = :status',{ status: criteria})
+        query.where('p."createdAt" < :cursor AND p.status = :status',{cursor: new Date(parseInt(cursor)), status: criteria})
       }
     let tasks = await query.getMany();
 
@@ -95,6 +121,7 @@ export class TaskResolver {
     @Ctx() { req }: MyContext
   ): Promise<Task> {
     if (!req.session.userId) throw new Error("not authorized");
+    sendNotification(task.department)
     return Task.create({
       ...task,
       creatorId: req.session.userId,

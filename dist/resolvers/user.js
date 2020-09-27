@@ -64,6 +64,16 @@ let UserResolver = class UserResolver {
             error: "Wrong credentials",
         };
     }
+    async setPushToken(token, { req }) {
+        if (!req.session.userId)
+            throw new Error("Not Authorized");
+        let user = await User_1.User.findOne(req.session.userId);
+        if (!user)
+            return false;
+        user.pushToken = token;
+        user = await user.save();
+        return user ? true : false;
+    }
     logout({ req, res }) {
         return new Promise((resolve) => req.session.destroy((err) => {
             res.clearCookie(constant_1.COOKIE_NAME);
@@ -104,6 +114,13 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Arg("token")), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "setPushToken", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     __param(0, type_graphql_1.Ctx()),
